@@ -1,36 +1,54 @@
 ﻿import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider } from '@mui/material';
+import { Toaster } from 'react-hot-toast';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { theme } from './styles/theme';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Verification from './pages/Verification';
+import Application from './pages/Application';
+import Profile from './pages/Profile';
+import Admin from './pages/Admin';
+import AdminLogin from './pages/AdminLogin';
+import Layout from './components/Layout/Layout';
+
+const ProtectedRoute = ({ children }) => {
+    const { user, loading } = useAuth();
+    if (loading) return <div>Loading...</div>;
+    if (!user) return <Navigate to="/login" />;
+    return children;
+};
+
+const AdminRoute = ({ children }) => {
+    const { user, loading } = useAuth();
+    if (loading) return <div>Loading...</div>;
+    if (!user) return <Navigate to="/admin-login" />;
+    if (user.role !== 'admin') return <Navigate to="/dashboard" />;
+    return children;
+};
 
 function App() {
     return (
-        <div style={{ 
-            textAlign: 'center', 
-            padding: '50px', 
-            fontFamily: 'Arial, sans-serif',
-            background: '#f0f4f8',
-            minHeight: '100vh'
-        }}>
-            <div style={{
-                background: 'white',
-                padding: '40px',
-                borderRadius: '20px',
-                maxWidth: '600px',
-                margin: 'auto',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-            }}>
-                <h1 style={{ fontSize: '48px', color: '#0a1628' }}>
-                    🏦 AdaptiveTrust
-                </h1>
-                <p style={{ fontSize: '20px', color: '#4a6a7f' }}>
-                    Fintech Underwriting Platform
-                </p>
-                <p style={{ color: '#00e676', fontWeight: 'bold' }}>
-                    ✅ Successfully Deployed on Vercel!
-                </p>
-                <p style={{ color: '#888', marginTop: '20px' }}>
-                    Full application coming soon...
-                </p>
-            </div>
-        </div>
+        <ThemeProvider theme={theme}>
+            <AuthProvider>
+                <Toaster position="top-right" />
+                <BrowserRouter>
+                    <Routes>
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/admin-login" element={<AdminLogin />} />
+                        <Route path="/" element={<Navigate to="/dashboard" />} />
+                        <Route element={<Layout />}>
+                            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                            <Route path="/verification" element={<ProtectedRoute><Verification /></ProtectedRoute>} />
+                            <Route path="/application" element={<ProtectedRoute><Application /></ProtectedRoute>} />
+                            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                            <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+                        </Route>
+                    </Routes>
+                </BrowserRouter>
+            </AuthProvider>
+        </ThemeProvider>
     );
 }
 
